@@ -1,1 +1,3 @@
 .DS_Store
+save
+*/__pycache__/
