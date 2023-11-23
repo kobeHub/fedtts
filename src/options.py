@@ -123,5 +123,33 @@ def args_parser():
     )
     parser.add_argument("--verbose", type=int, default=1, help="verbose")
     parser.add_argument("--seed", type=int, default=1, help="random seed")
+
+    # New arguments for FedTTS
+    parser.add_argument(
+        "--local_algo",
+        type=str,
+        default="fedavg",
+        help="The local training algorithm, "
+        "options: (fedavg [default], fedtts, fedprox)",
+    )
+    parser.add_argument(
+        "--n_cluster",
+        type=int,
+        default=3,
+        help="The number of divided clusters, default=3",
+    )
+    parser.add_argument(
+        "--r_overlapping",
+        type=float,
+        default=0.0,
+        help="The rate of overlapping bewteen 2 clusters, default=0.0",
+    )
+    parser.add_argument(
+        "--gamma",
+        type=float,
+        default=0.1,
+        help="Transfer leaning rate from other clusters, default=0.1",
+    )
+
     args = parser.parse_args()
     return args

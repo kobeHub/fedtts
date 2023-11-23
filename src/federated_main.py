@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# Python version: 3.6
-
-
 import os
 import copy
 import time
@@ -24,8 +19,8 @@ if __name__ == "__main__":
     start_time = time.time()
 
     # define paths
-    path_project = os.path.abspath("..")
-    logger = SummaryWriter("../logs")
+    path_project = os.path.abspath(".")
+    logger = SummaryWriter("./logs")
 
     args = args_parser()
     exp_details(args)
