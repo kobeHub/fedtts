@@ -1,7 +1,3 @@
-# Python version: 3.6
-
-
-from torch.optim.optimizer import Optimizer
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
@@ -9,10 +5,10 @@ import torch
 from torch.utils.data import DataLoader
 from torch import nn
 
-from utils import get_dataset
-from options import args_parser
-from update import test_inference
-from models import MLP, CNNMnist, CNNFashion_Mnist, CNNCifar
+from lib.utils import get_dataset
+from lib.options import args_parser
+from lib.update import test_inference
+from lib.models import MLP, CNNMnist, CNNFashion_Mnist, CNNCifar
 
 
 if __name__ == "__main__":

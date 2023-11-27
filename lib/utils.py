@@ -5,9 +5,9 @@
 import copy
 import torch
 from torchvision import datasets, transforms
-from clustering import cluster_dataset
-from sampling import mnist_iid, mnist_noniid, mnist_noniid_unequal
-from sampling import cifar_iid, cifar_noniid
+from .clustering import cluster_dataset
+from .sampling import mnist_iid, mnist_noniid, mnist_noniid_unequal
+from .sampling import cifar_iid, cifar_noniid
 
 
 def get_dataset(args, cache_manager, cluster_conf):

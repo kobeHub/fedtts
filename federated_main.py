@@ -10,11 +10,11 @@ import torch
 from torch import nn
 from tensorboardX import SummaryWriter
 
-from options import args_parser
-from round_cache import RoundCacheManager
-from update import LocalUpdate, test_inference
-from models import MLP, CNNMnist, CNNFashion_Mnist, CNNCifar
-from utils import get_dataset, average_weights, exp_details
+from lib.options import args_parser
+from lib.round_cache import RoundCacheManager
+from lib.update import LocalUpdate, test_inference
+from lib.models import MLP, CNNMnist, CNNFashion_Mnist, CNNCifar
+from lib.utils import get_dataset, average_weights, exp_details
 
 
 if __name__ == "__main__":

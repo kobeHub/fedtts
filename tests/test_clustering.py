@@ -1,6 +1,6 @@
 import unittest
-from src.clustering import cluster_dataset
-from src.round_cache import RoundCacheManager
+from lib.clustering import cluster_dataset
+from lib.round_cache import RoundCacheManager
 import numpy as np
 import yaml
 import torchvision

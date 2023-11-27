@@ -6,8 +6,8 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
-from round_cache import RoundCacheManager
-from utils import compute_local_init
+from .round_cache import RoundCacheManager
+from .utils import compute_local_init
 
 
 class DatasetSplit(Dataset):
