@@ -6,6 +6,9 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
+from round_cache import RoundCacheManager
+from utils import compute_local_init
+
 
 class DatasetSplit(Dataset):
     """An abstract Dataset class wrapped around Pytorch Dataset class."""
@@ -23,8 +26,9 @@ class DatasetSplit(Dataset):
 
 
 class LocalUpdate(object):
-    def __init__(self, args, dataset, idxs, logger):
+    def __init__(self, args, client_id, dataset, idxs, logger):
         self.args = args
+        self.client_id = client_id
         self.logger = logger
         self.trainloader, self.validloader, self.testloader = self.train_val_test(
             dataset, list(idxs)
@@ -39,9 +43,9 @@ class LocalUpdate(object):
         and user indexes.
         """
         # split indexes for train, validation, and test (80, 10, 10)
-        idxs_train = idxs[:int(0.8 * len(idxs))]
-        idxs_val = idxs[int(0.8 * len(idxs)):int(0.9 * len(idxs))]
-        idxs_test = idxs[int(0.9 * len(idxs)):]
+        idxs_train = idxs[: int(0.8 * len(idxs))]
+        idxs_val = idxs[int(0.8 * len(idxs)) : int(0.9 * len(idxs))]
+        idxs_test = idxs[int(0.9 * len(idxs)) :]
 
         trainloader = DataLoader(
             DatasetSplit(dataset, idxs_train),
@@ -60,7 +64,9 @@ class LocalUpdate(object):
         )
         return trainloader, validloader, testloader
 
-    def update_weights(self, model, global_round):
+    def update_weights(
+        self, model, global_round, is_tts: bool, round_cache: RoundCacheManager
+    ):
         # Set mode to train model
         model.train()
         epoch_loss = []
@@ -74,6 +80,13 @@ class LocalUpdate(object):
             optimizer = torch.optim.Adam(
                 model.parameters(), lr=self.args.lr, weight_decay=1e-4
             )
+        # Using TTS scheme to initialize the local model.
+        if is_tts and round_cache.get_round() == global_round - 1:
+            _, model_list, dp_cnts = round_cache.sample_from_other_cluster(
+                self.client_id,
+                self.args.n_transfer,
+            )
+            model = compute_local_init(model_list, dp_cnts, self.args.gamma, model)
 
         for iter in range(self.args.local_ep):
             batch_loss = []
@@ -100,6 +113,9 @@ class LocalUpdate(object):
                 self.logger.add_scalar("loss", loss.item())
                 batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss) / len(batch_loss))
+
+        # Store trained model.
+        round_cache.add_model(self.client_id, model.state_dict())
 
         return model.state_dict(), sum(epoch_loss) / len(epoch_loss)
 

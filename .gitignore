@@ -1,4 +1,5 @@
 .DS_Store
+data
 save
 logs
 */__pycache__/

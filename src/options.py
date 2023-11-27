@@ -135,8 +135,8 @@ def args_parser():
     parser.add_argument(
         "--n_cluster",
         type=int,
-        default=3,
-        help="The number of divided clusters, default=3",
+        default=0,
+        help="The number of divided clusters, default=0",
     )
     parser.add_argument(
         "--r_overlapping",
@@ -148,7 +148,19 @@ def args_parser():
         "--gamma",
         type=float,
         default=0.1,
-        help="Transfer leaning rate from other clusters, default=0.1",
+        help="Transfer leaning ratio from other clusters, default=0.1",
+    )
+    parser.add_argument(
+        "--n_transfer",
+        type=int,
+        default=1,
+        help="The count of transferable models from other clusters.",
+    )
+    parser.add_argument(
+        "--confile",
+        type=str,
+        default="./config/fedtts-conf.yaml",
+        help="The config file of the clustering.",
     )
 
     args = parser.parse_args()

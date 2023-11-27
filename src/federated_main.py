@@ -4,12 +4,14 @@ import time
 import pickle
 import numpy as np
 from tqdm import tqdm
+import yaml
 
 import torch
 from torch import nn
 from tensorboardX import SummaryWriter
 
 from options import args_parser
+from round_cache import RoundCacheManager
 from update import LocalUpdate, test_inference
 from models import MLP, CNNMnist, CNNFashion_Mnist, CNNCifar
 from utils import get_dataset, average_weights, exp_details
@@ -30,7 +32,12 @@ if __name__ == "__main__":
     device = "cuda" if args.gpu else "cpu"
 
     # load dataset and user groups
-    train_dataset, test_dataset, user_groups = get_dataset(args)
+    cache_manager = RoundCacheManager()
+    with open(args.config, "r") as conf_yaml:
+        cluster_config = yaml.safe_load(conf_yaml)
+    train_dataset, test_dataset, user_groups = get_dataset(
+        args, cache_manager, cluster_config
+    )
 
     # BUILD MODEL
     global_model = nn.Module()
@@ -60,6 +67,7 @@ if __name__ == "__main__":
 
     # copy weights
     global_weights = global_model.state_dict()
+    is_tts = args.local_algo == "fedtts"
 
     # Training
     train_loss, train_accuracy = [], []
@@ -77,15 +85,22 @@ if __name__ == "__main__":
         global_model.train()
         # sample a fraction of users (with args frac)
         m = max(int(args.frac * args.num_users), 1)
-        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        selected_uids = np.random.choice(range(args.num_users), m, replace=False)
 
         # for each sampled user
-        for idx in idxs_users:
+        for uid in selected_uids:
             local_model = LocalUpdate(
-                args=args, dataset=train_dataset, idxs=user_groups[idx], logger=logger
+                args=args,
+                client_id=uid,
+                dataset=train_dataset,
+                idxs=user_groups[uid],
+                logger=logger,
             )
             w, loss = local_model.update_weights(
-                model=copy.deepcopy(global_model), global_round=epoch
+                model=copy.deepcopy(global_model),
+                global_round=epoch,
+                is_tts=is_tts,
+                round_cache=cache_manager,
             )
             local_weights.append(copy.deepcopy(w))
             local_losses.append(copy.deepcopy(loss))
@@ -95,6 +110,7 @@ if __name__ == "__main__":
 
         # update global weights
         global_model.load_state_dict(global_weights)
+        cache_manager.advance_round()
 
         loss_avg = sum(local_losses) / len(local_losses)
         train_loss.append(loss_avg)
@@ -104,7 +120,11 @@ if __name__ == "__main__":
         global_model.eval()
         for c in range(args.num_users):
             local_model = LocalUpdate(
-                args=args, dataset=train_dataset, idxs=user_groups[idx], logger=logger
+                args=args,
+                client_id=c,
+                dataset=train_dataset,
+                idxs=user_groups[c],
+                logger=logger,
             )
             acc, loss = local_model.inference(model=global_model)
             list_acc.append(acc)
