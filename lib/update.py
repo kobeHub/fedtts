@@ -5,6 +5,7 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
+import random
 
 from .round_cache import RoundCacheManager
 from .utils import compute_local_init
@@ -22,7 +23,7 @@ class DatasetSplit(Dataset):
 
     def __getitem__(self, item):
         image, label = self.dataset[self.idxs[item]]
-        return torch.tensor(image), torch.tensor(label)
+        return image.clone().detach(), torch.tensor(label)
 
 
 class LocalUpdate(object):
@@ -86,12 +87,18 @@ class LocalUpdate(object):
             and round_cache.get_round() == global_round
             and global_round > 0
         ):
-            print(f"Using TTS in round: {global_round}")
             _, model_list, dp_cnts = round_cache.sample_from_other_cluster(
                 self.client_id,
                 self.args.n_transfer,
             )
-            model = compute_local_init(model_list, dp_cnts, self.args.gamma, model)
+            init_parameters = compute_local_init(
+                model_list, dp_cnts, self.args.gamma, model.state_dict()
+            )
+            model.load_state_dict(init_parameters)
+            # if random.random() > 0.5:
+            #     print(
+            #         f"Using TTS in round: {global_round}, models count from other cluster: {len(model_list)}"
+            #     )
 
         for iter in range(self.args.local_ep):
             batch_loss = []

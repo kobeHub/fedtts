@@ -157,7 +157,7 @@ def args_parser():
         help="The count of transferable models from other clusters.",
     )
     parser.add_argument(
-        "--confile",
+        "--config_file",
         type=str,
         default="./config/fedtts-conf.yaml",
         help="The config file of the clustering.",

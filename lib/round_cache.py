@@ -59,10 +59,10 @@ class RoundCacheManager:
         clusters = set(self.cluster_to_clients.keys()) - set(
             self.client_to_clusters[client_id]
         )
-        print(f"Avail cluster: {clusters}")
+        # print(f"Avail cluster: {clusters}")
         for avail_cluster in clusters:
             clients = self.cluster_to_clients[avail_cluster]
-            print(f"cluster: {avail_cluster}, client: {clients}")
+            # print(f"cluster: {avail_cluster}, client: {clients}")
             # Filter the cache clients.
             clients = [
                 client

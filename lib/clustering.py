@@ -17,7 +17,7 @@ def cluster_dataset(
     :param n_users: number of total users
     :param n_cluster: number of clusters
     :param overlapping_rate: input dataset
-    :return: dict of image index
+    :return: (dict of image index, np.array([idx, label]))
     """
     if n_cluster not in mnist_conf["n_clusters"]:
         raise ValueError(f"Give n_cluster={n_cluster} is not defined in config file")

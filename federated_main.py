@@ -33,11 +33,12 @@ if __name__ == "__main__":
 
     # load dataset and user groups
     cache_manager = RoundCacheManager()
-    with open(args.config, "r") as conf_yaml:
+    with open(args.config_file, "r") as conf_yaml:
         cluster_config = yaml.safe_load(conf_yaml)
     train_dataset, test_dataset, user_groups = get_dataset(
         args, cache_manager, cluster_config
     )
+    cache_manager.eval()
 
     # BUILD MODEL
     global_model = nn.Module()
@@ -86,6 +87,7 @@ if __name__ == "__main__":
         # sample a fraction of users (with args frac)
         m = max(int(args.frac * args.num_users), 1)
         selected_uids = np.random.choice(range(args.num_users), m, replace=False)
+        # print(f"Selected users: {selected_uids}, user idx: {user_groups.keys()}")
 
         # for each sampled user
         for uid in selected_uids:

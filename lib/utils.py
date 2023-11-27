@@ -5,6 +5,7 @@
 import copy
 import torch
 from torchvision import datasets, transforms
+from yaml.constructor import collections
 from .clustering import cluster_dataset
 from .sampling import mnist_iid, mnist_noniid, mnist_noniid_unequal
 from .sampling import cifar_iid, cifar_noniid
@@ -67,12 +68,12 @@ def get_dataset(args, cache_manager, cluster_conf):
         )
 
         # Determine is there are clusters
-        if args.n_clusters > 0:
-            user_groups = cluster_dataset(
+        if args.n_cluster > 0:
+            user_groups, _labels_idxs = cluster_dataset(
                 train_dataset,
-                args.n_users,
+                args.num_users,
                 args.n_cluster,
-                args.overlapping_rate,
+                args.r_overlapping,
                 conf,
                 cache_manager,
             )
@@ -112,15 +113,17 @@ def compute_local_init(w_list, dp_list, gamma, global_model):
     """
     # weighted avg model from other clusters.
     total_dps = float(sum(dp_list))
-    transfer_avg = (dp_list[0] / total_dps) * copy.deepcopy(w_list[0])
-    for key in transfer_avg.keys():
-        for i in range(1, len(w_list)):
-            transfer_avg[key] += (dp_list[i] / total_dps) * w_list[i][key]
+    transfer_avg = collections.OrderedDict()
+    for key in w_list[0].keys():
+        transfer_avg[key] = 0.0
+        for i, w in enumerate(w_list):
+            # Compute the weighted averaging parameters.
+            transfer_avg[key] += (dp_list[i] / total_dps) * w[key]
+    # print(f"dp_list: {dp_list}")
 
     # Transfer averaging gamma part from other clusters.
-    transfer_avg = average_weights(w_list)
     for key in transfer_avg.keys():
-        transfer_avg[key] = transfer_avg[key] * gamma + global_model * (1 - gamma)
+        transfer_avg[key] = transfer_avg[key] * gamma + global_model[key] * (1 - gamma)
     return transfer_avg
 
 
@@ -131,12 +134,17 @@ def exp_details(args):
     print(f"    Learning  : {args.lr}")
     print(f"    Global Rounds   : {args.epochs}\n")
 
-    print("    Federated parameters:")
-    if args.iid:
-        print("    IID")
+    print(f"    Federated parameters:\n    Local algo: {args.local_algo}")
+    if args.n_cluster > 0:
+        print(f"    Number of clusters: {args.n_cluster}")
+        print(f"    Overlapping rate: {args.r_overlapping}")
+        print(f"    Transferable number from other clusters: {args.n_transfer}")
     else:
-        print("    Non-IID")
-    print(f"    Fraction of users  : {args.frac}")
-    print(f"    Local Batch size   : {args.local_bs}")
-    print(f"    Local Epochs       : {args.local_ep}\n")
+        if args.iid:
+            print("    IID")
+        else:
+            print("    Non-IID")
+        print(f"    Fraction of users  : {args.frac}")
+        print(f"    Local Batch size   : {args.local_bs}")
+        print(f"    Local Epochs       : {args.local_ep}\n")
     return
