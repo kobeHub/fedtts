@@ -59,17 +59,25 @@ class RoundCacheManager:
         clusters = set(self.cluster_to_clients.keys()) - set(
             self.client_to_clusters[client_id]
         )
+        print(f"Avail cluster: {clusters}")
         for avail_cluster in clusters:
             clients = self.cluster_to_clients[avail_cluster]
+            print(f"cluster: {avail_cluster}, client: {clients}")
             # Filter the cache clients.
-            clients = [client for client in clients if client in self.client_to_models]
+            clients = [
+                client
+                for client in clients
+                if client in self.client_to_models_last_round
+            ]
             if len(clients) < size_per_cluster:
                 continue
-            cli_id = np.random.choice(clients, size=size_per_cluster, replace=False)
-            if cli_id != client_id:
-                client_ids.append(cli_id)
-                models.append(self.client_to_models_last_round[cli_id])
-                dp_cnts.append(self.client_to_datapoint_cnt[cli_id])
+            for cli_id in np.random.choice(
+                clients, size=size_per_cluster, replace=False
+            ):
+                if cli_id != client_id:
+                    client_ids.append(cli_id)
+                    models.append(self.client_to_models_last_round[cli_id])
+                    dp_cnts.append(self.client_to_datapoint_cnt[cli_id])
         return client_ids, models, dp_cnts
 
     def set_cluster_user_cnt(self, user_cnt_list):
@@ -94,27 +102,7 @@ class RoundCacheManager:
         print(
             f"\nCached models from clients in current round: {self.client_to_models_current_round.keys()}"
         )
+        print(f"Device datapoint glances:\n{self.client_to_datapoint_cnt}")
         print(
             f"======================================================================="
         )
-
-
-class TestCache(unittest.TestCase):
-    def cacheUsage(self):
-        # Creating instances
-        singleton_instance1 = RoundCacheManager()
-        singleton_instance2 = RoundCacheManager()
-
-        singleton_instance1.set_round(121)
-        cc = 0
-        for i in range(5):
-            for j in range(10):
-                client = random.randint(0, 100)
-                cc = client
-                singleton_instance1.add_client_to_cluster(client, i)
-                singleton_instance2.add_model(
-                    client, {"client": client, "i": i, "j": j}
-                )
-        singleton_instance1.eval()
-        print(f"cc: {cc}")
-        print(singleton_instance2.sample_from_other_cluster(cc))

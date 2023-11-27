@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     # copy weights
     global_weights = global_model.state_dict()
-    is_tts = args.local_algo == "fedtts"
+    local_algo = args.local_algo
 
     # Training
     train_loss, train_accuracy = [], []
@@ -99,7 +99,7 @@ if __name__ == "__main__":
             w, loss = local_model.update_weights(
                 model=copy.deepcopy(global_model),
                 global_round=epoch,
-                is_tts=is_tts,
+                local_algo=local_algo,
                 round_cache=cache_manager,
             )
             local_weights.append(copy.deepcopy(w))

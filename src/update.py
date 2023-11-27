@@ -65,7 +65,7 @@ class LocalUpdate(object):
         return trainloader, validloader, testloader
 
     def update_weights(
-        self, model, global_round, is_tts: bool, round_cache: RoundCacheManager
+        self, model, global_round, local_algo: str, round_cache: RoundCacheManager
     ):
         # Set mode to train model
         model.train()
@@ -81,7 +81,12 @@ class LocalUpdate(object):
                 model.parameters(), lr=self.args.lr, weight_decay=1e-4
             )
         # Using TTS scheme to initialize the local model.
-        if is_tts and round_cache.get_round() == global_round - 1:
+        if (
+            local_algo == "fedtts"
+            and round_cache.get_round() == global_round
+            and global_round > 0
+        ):
+            print(f"Using TTS in round: {global_round}")
             _, model_list, dp_cnts = round_cache.sample_from_other_cluster(
                 self.client_id,
                 self.args.n_transfer,
@@ -115,7 +120,8 @@ class LocalUpdate(object):
             epoch_loss.append(sum(batch_loss) / len(batch_loss))
 
         # Store trained model.
-        round_cache.add_model(self.client_id, model.state_dict())
+        if local_algo == "fedtts":
+            round_cache.add_model(self.client_id, model.state_dict())
 
         return model.state_dict(), sum(epoch_loss) / len(epoch_loss)
 
