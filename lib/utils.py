@@ -4,6 +4,7 @@
 
 import copy
 import torch
+import numpy as np
 from torchvision import datasets, transforms
 from yaml.constructor import collections
 from .clustering import cluster_dataset
@@ -148,3 +149,12 @@ def exp_details(args):
         print(f"    Local Batch size   : {args.local_bs}")
         print(f"    Local Epochs       : {args.local_ep}\n")
     return
+
+
+def set_seed(seed):
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    # If using GPU, set the random seed for GPU as well
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)  # if using multiple GPUs

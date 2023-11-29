@@ -14,18 +14,19 @@ from lib.options import args_parser
 from lib.round_cache import RoundCacheManager
 from lib.update import LocalUpdate, test_inference
 from lib.models import MLP, CNNMnist, CNNFashion_Mnist, CNNCifar
-from lib.utils import get_dataset, average_weights, exp_details
+from lib.utils import get_dataset, average_weights, exp_details, set_seed
 
 
 if __name__ == "__main__":
     start_time = time.time()
 
-    # define paths
-    path_project = os.path.abspath(".")
-    logger = SummaryWriter("./logs")
-
     args = args_parser()
     exp_details(args)
+    set_seed(args.seed)
+
+    # define paths
+    path_project = os.path.abspath(".")
+    logger = SummaryWriter(os.path.join("./logs", f"{args.local_algo}"))
 
     if args.gpu:
         torch.cuda.set_device(args.gpu)
@@ -142,12 +143,6 @@ if __name__ == "__main__":
         end_epoch = epoch
         cur_accuracy = train_accuracy[-1]
         # Check if it reachs a target accuracy.
-        # if args.target_accuracy != -1 and cur_accuracy > args.target_accuracy:
-        #     print(
-        #         f"| Global rounds: {end_epoch} | Traning target reachs ",
-        #         f"accuracy: {cur_accuracy} >= {args.target_accuracy}",
-        #     )
-        #     break
         if args.target_accuracy != -1 and epoch > args.eval_after:
             if (epoch + 1) % args.eval_every == 0:
                 cur_test_acc, _ = test_inference(args, global_model, test_dataset)
@@ -173,18 +168,17 @@ if __name__ == "__main__":
     print("|---- Test Accuracy: {:.2f}%".format(100 * test_acc))
 
     # Saving the objects train_loss and train_accuracy:
-    file_name = "save/objects/{}_{}_{}_C[{}]_iid[{}]_E[{}]_B[{}].pkl".format(
-        args.dataset,
-        args.model,
-        args.epochs,
-        args.frac,
-        args.iid,
-        args.local_ep,
-        args.local_bs,
-    )
+    file_base_name = f"{args.local_algo}_{args.dataset}"
+    f"_{args.model}_R{args.epochs}_C[{args.frac,}]_"
+    f"iid[{args.iid}]_TA[{args.target_accuracy}]_B[{args.local_bs}]"
+    f"_Cluster[{args.n_cluster,}]_Over[{args.r_overlapping}]"
+    f"_Gamma[{args.gamma}]_Trans[{args.n_transfer}]"
+    dump_file = os.path.join("./save/pickle", file_base_name + ".pkl")
+    print(f"Dump training metrics to {dump_file}")
 
-    with open(file_name, "wb") as f:
+    with open(dump_file, "wb") as f:
         pickle.dump([train_loss, train_accuracy], f)
+        pickle.dump([test_acc, test_loss], f)
 
     print("\n Total Run Time: {0:0.4f}".format(time.time() - start_time))
 
@@ -200,17 +194,7 @@ if __name__ == "__main__":
     plt.plot(range(len(train_loss)), train_loss, color="r")
     plt.ylabel("Training loss")
     plt.xlabel("Communication Rounds")
-    plt.savefig(
-        "save/fed_{}_{}_{}_C[{}]_iid[{}]_E[{}]_B[{}]_loss.png".format(
-            args.dataset,
-            args.model,
-            args.epochs,
-            args.frac,
-            args.iid,
-            args.local_ep,
-            args.local_bs,
-        )
-    )
+    plt.savefig(os.path.join("./save/train_loss_imgs", file_base_name + "_loss.png"))
 
     # Plot Average Accuracy vs Communication rounds
     plt.figure()
@@ -218,14 +202,5 @@ if __name__ == "__main__":
     plt.plot(range(len(train_accuracy)), train_accuracy, color="k")
     plt.ylabel("Average Accuracy")
     plt.xlabel("Communication Rounds")
-    plt.savefig(
-        "save/fed_{}_{}_{}_C[{}]_iid[{}]_E[{}]_B[{}]_acc.png".format(
-            args.dataset,
-            args.model,
-            args.epochs,
-            args.frac,
-            args.iid,
-            args.local_ep,
-            args.local_bs,
-        )
-    )
+    plt.savefig(os.path.join("./save/train_acc_imgs", file_base_name + "_acc.png"))
+    logger.close()
