@@ -32,7 +32,9 @@ def cluster_dataset(
 
     # Sort idxs according to labels.
     idxs = np.arange(data_size)
-    labels = dataset.targets.numpy()
+    # if isinstance(dataset.targets, list):
+    labels = np.array(dataset.targets)
+    # labels = dataset.targets.numpy()
     idxs_labels = np.vstack((idxs, labels))
 
     # Assign labels to each cluster;

@@ -5,7 +5,6 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
-import random
 
 from .round_cache import RoundCacheManager
 from .utils import compute_local_init
@@ -96,8 +95,7 @@ class LocalUpdate(object):
             )
             model.load_state_dict(init_parameters)
             # if random.random() > 0.5:
-            #     print(
-            #         f"Using TTS in round: {global_round}, models count from other cluster: {len(model_list)}"
+            #     print( f"Using TTS in round: {global_round}, models count from other cluster: {len(model_list)}"
             #     )
 
         for iter in range(self.args.local_ep):

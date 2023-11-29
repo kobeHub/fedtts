@@ -8,3 +8,13 @@ MNIST:
   overlapping:
     3: ["0&1"]
     5: ["0&1", "1&2", "3&4"]
+CIFAR:
+  n_clusters: [3, 4, 5]
+  avail_overlapping: [3, 5]
+  labels_per_cluster:
+    3: [3, 3, 4]
+    4: [2, 3, 2, 3]
+    5: [2, 2, 2, 2, 2]
+  overlapping:
+    3: ["0&1"]
+    5: ["0&1", "1&2", "3&4"]
