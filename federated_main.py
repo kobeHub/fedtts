@@ -5,6 +5,7 @@ import pickle
 import numpy as np
 from tqdm import tqdm
 import yaml
+import pathlib
 
 import torch
 from torch import nn
@@ -26,7 +27,15 @@ if __name__ == "__main__":
 
     # define paths
     path_project = os.path.abspath(".")
-    logger = SummaryWriter(os.path.join("./logs", f"{args.local_algo}"))
+    logger = SummaryWriter(os.path.join("./logs", f"{args.local_algo}_{args.eid}"))
+    save_dirs = [
+        os.path.join(os.path.join("save", f"{args.local_algo}_{args.eid}"), i)
+        for i in ["pickle", "train_loss_img", "train_acc_img"]
+    ]
+    for dir in save_dirs:
+        if not os.path.exists(dir):
+            print(f"Create dir: {dir}")
+            pathlib.Path(dir).mkdir(parents=True)
 
     if args.gpu:
         torch.cuda.set_device(args.gpu)
@@ -156,7 +165,7 @@ if __name__ == "__main__":
                 else:
                     print(
                         f"| Global rounds: {end_epoch} ",
-                        "| rest-set accuracy",
+                        "| test-set accuracy",
                         f": {cur_test_acc} < {args.target_accuracy}",
                     )
 
@@ -168,12 +177,14 @@ if __name__ == "__main__":
     print("|---- Test Accuracy: {:.2f}%".format(100 * test_acc))
 
     # Saving the objects train_loss and train_accuracy:
-    file_base_name = f"{args.local_algo}_{args.dataset}"
-    f"_{args.model}_R{args.epochs}_C[{args.frac,}]_"
-    f"iid[{args.iid}]_TA[{args.target_accuracy}]_B[{args.local_bs}]"
-    f"_Cluster[{args.n_cluster,}]_Over[{args.r_overlapping}]"
-    f"_Gamma[{args.gamma}]_Trans[{args.n_transfer}]"
-    dump_file = os.path.join("./save/pickle", file_base_name + ".pkl")
+    file_base_name = (
+        f"{args.local_algo}_{args.dataset}"
+        f"_{args.model}_R{args.epochs}_C[{args.frac}]_"
+        f"iid[{args.iid}]_TA[{args.target_accuracy}]_B[{args.local_bs}]"
+        f"_Cluster[{args.n_cluster}]_Over[{args.r_overlapping}]"
+        f"_Gamma[{args.gamma}]_Trans[{args.n_transfer}]"
+    )
+    dump_file = os.path.join(save_dirs[0], file_base_name + ".pkl")
     print(f"Dump training metrics to {dump_file}")
 
     with open(dump_file, "wb") as f:
@@ -194,7 +205,7 @@ if __name__ == "__main__":
     plt.plot(range(len(train_loss)), train_loss, color="r")
     plt.ylabel("Training loss")
     plt.xlabel("Communication Rounds")
-    plt.savefig(os.path.join("./save/train_loss_imgs", file_base_name + "_loss.png"))
+    plt.savefig(os.path.join(save_dirs[1], file_base_name + "_loss.png"))
 
     # Plot Average Accuracy vs Communication rounds
     plt.figure()
@@ -202,5 +213,5 @@ if __name__ == "__main__":
     plt.plot(range(len(train_accuracy)), train_accuracy, color="k")
     plt.ylabel("Average Accuracy")
     plt.xlabel("Communication Rounds")
-    plt.savefig(os.path.join("./save/train_acc_imgs", file_base_name + "_acc.png"))
+    plt.savefig(os.path.join(save_dirs[2], file_base_name + "_acc.png"))
     logger.close()

@@ -162,6 +162,12 @@ def args_parser():
         default="./config/fedtts-conf.yaml",
         help="The config file of the clustering.",
     )
+    parser.add_argument(
+        "--eid",
+        type=int,
+        default=1,
+        help="The id of the experiments",
+    )
 
     args = parser.parse_args()
     return args
