@@ -63,7 +63,7 @@ def plot_traing_results(file_dir):
     ax1.legend(lines, labels, loc="lower right")
 
     # Show the plot
-    exper_name = file_dir.split("/")[1][:-2]
+    exper_name = file_dir.split("/")[1].split("_")[0]
     ta, cluster, over = extract_from_filename(train_p)
     plt.title(
         f"{exper_name} Target Acc: {ta}, Clusters: {cluster}, Overlapping: {over}"
@@ -71,6 +71,7 @@ def plot_traing_results(file_dir):
     save_file = os.path.join(file_dir, "training_test.png")
     print(f"Save train test figure {save_file}")
     plt.savefig(save_file, dpi=300)
+    plt.close()
 
 
 def extract_from_filename(input_string):
