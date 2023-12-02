@@ -52,6 +52,4 @@ if __name__ == '__main__':
     with Pool(processes=num_cores) as pool:
         # Map the worker function to the tasks and additional arguments, distributing them across the Pool
         pool.map(worker, tasks_and_args)
-        pool.close()
-        pool.join()
 
