@@ -102,6 +102,7 @@ class LocalUpdate(object):
         for iter in range(self.args.local_ep):
             batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.trainloader):
+                print(type(self.device))
                 images, labels = images.to(self.device), labels.to(self.device)
 
                 model.zero_grad()
