@@ -55,6 +55,9 @@ if __name__ == '__main__':
 
         # Wait for all processes to finish and get the results
         for result in results:
-            result.get()
+            result.wait()
+
+    print("All tasks have finished.")
+
 
 
