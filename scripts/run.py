@@ -43,6 +43,9 @@ if __name__ == '__main__':
         (5, 'cnn', 'cifar10', 5, 1000, 0.96, 2, 10, 0.1, 100, 'FedAvg', 5, 0, 0.1, 5, './config/fedtts-conf.yaml', 22, 0),
         # Add more tuples for additional tasks
         (6, 'cnn', 'cifar10', 5, 1000, 0.96, 2, 10, 0.1, 100, 'FedTTS', 5, 0, 0.1, 5, './config/fedtts-conf.yaml', 22, 0),
+        (7, 'cnn', 'cifar10', 5, 1000, 0.96, 2, 10, 0.1, 100, 'FedAvg', 3, 0.1, 0.1, 5, './config/fedtts-conf.yaml', 23, 0),
+        # Add more tuples for additional tasks
+        (8, 'cnn', 'cifar10', 5, 1000, 0.96, 2, 10, 0.1, 100, 'FedTTS', 3, 0.1, 0.1, 5, './config/fedtts-conf.yaml', 23, 0),
     ]
 
     # Create a Pool with the specified number of cores
