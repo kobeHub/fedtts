@@ -51,5 +51,10 @@ if __name__ == '__main__':
     # Create a Pool with the specified number of cores
     with Pool(processes=num_cores) as pool:
         # Map the worker function to the tasks and additional arguments, distributing them across the Pool
-        pool.map(worker, tasks_and_args)
+        results = [pool.apply_async(worker, (args,)) for args in tasks_and_args]
+
+        # Wait for all processes to finish and get the results
+        for result in results:
+            result.get()
+
 
