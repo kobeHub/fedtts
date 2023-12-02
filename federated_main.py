@@ -41,9 +41,15 @@ if __name__ == "__main__":
             print(f"Create dir: {dir}")
             pathlib.Path(dir).mkdir(parents=True)
 
+    device = "cpu"
     if args.gpu:
-        torch.cuda.set_device(args.gpu)
-    device = "cuda" if args.gpu else "cpu"
+        if args.gpu == "dml":
+            import torch_directml
+
+            device = torch_directml.device()
+        else:
+            torch.cuda.set_device(args.gpu)
+            device = "cuda"
 
     # load dataset and user groups
     cache_manager = RoundCacheManager()
