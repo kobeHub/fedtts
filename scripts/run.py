@@ -3,7 +3,7 @@ import subprocess
 
 def worker(args):
     task, model, dataset, local_ep, epochs, target_accuracy, eval_every, local_bs, frac, eval_after, local_algo, n_cluster, r_overlapping, gamma, n_transfer, config_file, eid, verbose = args
-    result = subprocess.run(['python', 'your_python_script.py',
+    result = subprocess.run(['python3', 'federated_main.py',
                              '--model', model,
                              '--dataset', dataset,
                              '--local_ep', str(local_ep),
@@ -52,4 +52,6 @@ if __name__ == '__main__':
     with Pool(processes=num_cores) as pool:
         # Map the worker function to the tasks and additional arguments, distributing them across the Pool
         pool.map(worker, tasks_and_args)
+        pool.close()
+        pool.join()
 
