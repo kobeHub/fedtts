@@ -82,14 +82,15 @@ class LocalUpdate(object):
             )
         # Using TTS scheme to initialize the local model.
         if (
-            local_algo == "fedtts"
+            local_algo == "FedTTS"
             and round_cache.get_round() == global_round
             and global_round > 0
         ):
-            _, model_list, dp_cnts = round_cache.sample_from_other_cluster(
+            selected_uids, model_list, dp_cnts = round_cache.sample_from_other_cluster(
                 self.client_id,
                 self.args.n_transfer,
             )
+            # print(f"client {self.client_id} transfer learning from: {selected_uids}")
             init_parameters = compute_local_init(
                 model_list, dp_cnts, self.args.gamma, model.state_dict()
             )
@@ -125,7 +126,7 @@ class LocalUpdate(object):
             epoch_loss.append(sum(batch_loss) / len(batch_loss))
 
         # Store trained model.
-        if local_algo == "fedtts":
+        if local_algo == "FedTTS":
             round_cache.add_model(self.client_id, model.state_dict())
 
         return model.state_dict(), sum(epoch_loss) / len(epoch_loss)

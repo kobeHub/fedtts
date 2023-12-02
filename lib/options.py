@@ -130,7 +130,7 @@ def args_parser():
         type=str,
         default="fedavg",
         help="The local training algorithm, "
-        "options: (fedavg [default], fedtts, fedprox)",
+        "options: (FedAvg [default], FedTTS, FedProx)",
     )
     parser.add_argument(
         "--n_cluster",

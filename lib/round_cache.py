@@ -1,5 +1,4 @@
 import numpy as np
-import unittest
 
 
 class RoundCacheManager:
@@ -56,9 +55,14 @@ class RoundCacheManager:
         :return List of (client_id, client_model, client_datapoint_cnt)
         """
         client_ids, models, dp_cnts = [], [], []
-        clusters = set(self.cluster_to_clients.keys()) - set(
-            self.client_to_clusters[client_id]
-        )
+        # If the client is in mutiple cluster,
+        # it can still select client from a same cluster.
+        if self.in_mutiple_cluster(client_id):
+            clusters = set(self.cluster_to_clients.keys())
+        else:
+            clusters = set(self.cluster_to_clients.keys()) - set(
+                self.client_to_clusters[client_id]
+            )
         # print(f"Avail cluster: {clusters}")
         for avail_cluster in clusters:
             clients = self.cluster_to_clients[avail_cluster]
@@ -69,16 +73,20 @@ class RoundCacheManager:
                 for client in clients
                 if client in self.client_to_models_last_round
             ]
-            if len(clients) < size_per_cluster:
-                continue
-            for cli_id in np.random.choice(
-                clients, size=size_per_cluster, replace=False
-            ):
+            select_cnt = min(size_per_cluster, len(clients))
+            # if select_cnt < size_per_cluster:
+            #     print(
+            #         f"[CacheManager] Not enough cached models for {size_per_cluster}, using {select_cnt}"
+            #     )
+            for cli_id in np.random.choice(clients, size=select_cnt, replace=False):
                 if cli_id != client_id:
                     client_ids.append(cli_id)
                     models.append(self.client_to_models_last_round[cli_id])
                     dp_cnts.append(self.client_to_datapoint_cnt[cli_id])
         return client_ids, models, dp_cnts
+
+    def in_mutiple_cluster(self, client_id):
+        return len(self.client_to_clusters[client_id]) > 1
 
     def set_cluster_user_cnt(self, user_cnt_list):
         self.cluster_user_cnt_list = user_cnt_list
@@ -96,6 +104,9 @@ class RoundCacheManager:
                 f"{self.cluster_user_cnt_list[cluster]}; "
                 f"logical cnts: {len(clients)}) : {clients}"
             )
+        for client_id, clusters in self.client_to_clusters.items():
+            if len(clusters) > 1:
+                print(f"Overlapping client {client_id} in clusters: {clusters}")
         print(
             f"\nCached models from clients in last round: {self.client_to_models_last_round.keys()}"
         )

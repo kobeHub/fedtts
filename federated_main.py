@@ -27,7 +27,11 @@ if __name__ == "__main__":
 
     # define paths
     path_project = os.path.abspath(".")
-    logger = SummaryWriter(os.path.join("./logs", f"{args.local_algo}_{args.eid}"))
+    summary_path = os.path.join("./logs", f"{args.local_algo}_{args.eid}")
+    if os.path.exists(summary_path):
+        print("Duplicated --eid, may lose results, exited")
+        exit(-1)
+    logger = SummaryWriter(summary_path)
     save_dirs = [
         os.path.join(os.path.join("save", f"{args.local_algo}_{args.eid}"), i)
         for i in ["pickle", "train_loss_img", "train_acc_img"]
@@ -81,7 +85,9 @@ if __name__ == "__main__":
     local_algo = args.local_algo
 
     # Training
+    train_rounds, test_rounds = [], []
     train_loss, train_accuracy = [], []
+    test_accuracy = []
     val_acc_list, net_list = [], []
     cv_loss, cv_acc = [], []
     print_every = 2
@@ -142,6 +148,7 @@ if __name__ == "__main__":
             list_acc.append(acc)
             list_loss.append(loss)
         train_accuracy.append(sum(list_acc) / len(list_acc))
+        train_rounds.append(epoch)
 
         # print global training loss after every 'i' rounds
         if (epoch + 1) % print_every == 0:
@@ -155,6 +162,8 @@ if __name__ == "__main__":
         if args.target_accuracy != -1 and epoch > args.eval_after:
             if (epoch + 1) % args.eval_every == 0:
                 cur_test_acc, _ = test_inference(args, global_model, test_dataset)
+                test_rounds.append(epoch)
+                test_accuracy.append(cur_test_acc)
                 if cur_test_acc >= args.target_accuracy:
                     print(
                         f"| Global rounds: {end_epoch} ",
@@ -184,12 +193,14 @@ if __name__ == "__main__":
         f"_Cluster[{args.n_cluster}]_Over[{args.r_overlapping}]"
         f"_Gamma[{args.gamma}]_Trans[{args.n_transfer}]"
     )
-    dump_file = os.path.join(save_dirs[0], file_base_name + ".pkl")
-    print(f"Dump training metrics to {dump_file}")
+    train_dump = os.path.join(save_dirs[0], file_base_name + "_train.pkl")
+    test_dump = os.path.join(save_dirs[0], file_base_name + "_test.pkl")
+    print(f"Dump training and test metrics to {train_dump}\n{test_dump}")
 
-    with open(dump_file, "wb") as f:
-        pickle.dump([train_loss, train_accuracy], f)
-        pickle.dump([test_acc, test_loss], f)
+    with open(train_dump, "wb") as f:
+        pickle.dump([train_rounds, train_loss, train_accuracy], f)
+    with open(test_dump, "wb") as fi:
+        pickle.dump([test_rounds, test_accuracy], fi)
 
     print("\n Total Run Time: {0:0.4f}".format(time.time() - start_time))
 

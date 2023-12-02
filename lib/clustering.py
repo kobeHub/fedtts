@@ -21,11 +21,10 @@ def cluster_dataset(
     """
     if n_cluster not in mnist_conf["n_clusters"]:
         raise ValueError(f"Give n_cluster={n_cluster} is not defined in config file")
-    if n_cluster not in mnist_conf["avail_overlapping"]:
+    if overlapping_rate != 0 and n_cluster not in mnist_conf["avail_overlapping"]:
         raise ValueError(f"Give n_cluster={n_cluster} is not allowed with overlapping")
 
     labels_cnt_list = mnist_conf["labels_per_cluster"][n_cluster]
-    overlapping_topo = mnist_conf["overlapping"][n_cluster]
 
     # The number oata points per user
     data_size = len(dataset)
@@ -69,6 +68,7 @@ def cluster_dataset(
 
     # Arrange overlapping
     if overlapping_rate > 0.0 and overlapping_rate < 1.0:
+        overlapping_topo = mnist_conf["overlapping"][n_cluster]
         for lapping_part in overlapping_topo:
             lhs, rhs = [int(li) for li in lapping_part.split("&")]
             lhs_over_cnt, rhs_over_cnt = int(user_cnts[lhs] * overlapping_rate), int(
