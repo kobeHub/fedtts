@@ -50,6 +50,7 @@ if __name__ == "__main__":
         else:
             torch.cuda.set_device(args.gpu)
             device = "cuda"
+    print(f"Using device {device}")
 
     # load dataset and user groups
     cache_manager = RoundCacheManager()
