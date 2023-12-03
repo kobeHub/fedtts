@@ -34,19 +34,30 @@ def get_dataset(args, cache_manager, cluster_conf):
         test_dataset = datasets.CIFAR10(
             data_dir, train=False, download=True, transform=apply_transform
         )
-
-        # sample training data amongst users
-        if args.iid:
-            # Sample IID user data from Mnist
-            user_groups = cifar_iid(train_dataset, args.num_users)
+        
+        conf = cluster_conf["CIFAR"]
+        if args.n_cluster > 0:
+            user_groups, _labels_idxs = cluster_dataset(
+                train_dataset,
+                args.num_users,
+                args.n_cluster,
+                args.r_overlapping,
+                conf,
+                cache_manager,
+            )
         else:
-            # Sample Non-IID user data from Mnist
-            if args.unequal:
-                # Chose uneuqal splits for every user
-                raise NotImplementedError()
+            # sample training data amongst users
+            if args.iid:
+                # Sample IID user data from Mnist
+                user_groups = cifar_iid(train_dataset, args.num_users)
             else:
-                # Chose euqal splits for every user
-                user_groups = cifar_noniid(train_dataset, args.num_users)
+                # Sample Non-IID user data from Mnist
+                if args.unequal:
+                    # Chose uneuqal splits for every user
+                    raise NotImplementedError()
+                else:
+                    # Chose euqal splits for every user
+                    user_groups = cifar_noniid(train_dataset, args.num_users)
 
     elif args.dataset == "mnist" or "fmnist":
         if args.dataset == "mnist":
